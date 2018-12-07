@@ -1,0 +1,5 @@
+#What this should print out daddy
+10  25
+2   45
+8   20
+10  1
