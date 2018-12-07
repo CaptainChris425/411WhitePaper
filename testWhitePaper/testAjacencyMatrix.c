@@ -25,14 +25,17 @@ int main(int argc, char *argv[]){
     numNodes = atoi(argv[2]);
        
     initGraphs(); 
+/*
     readInFileToGraph(argv[1]);
     //Testing if the edges in the struct work as I think theu should
     addEdgeToGraph(0, 14);
     addEdgeToGraph(0, 15);
     printf("Edge index [0] = %d\n",allNodes[10].edges[0]);
     printf("Edge index [1] = %d\n",allNodes[10].edges[1]);
-    printf("[%d][%d] -> %d\n",10,25,graph[10][25]);
-    printf("[%d][%d] -> %d\n",0,15,graph[2][45]);
+    printf("A random edge from node 256 is %d\n", goToRandomNeighbor(256));
+    //printf("[%d][%d] -> %d\n",10,25,graph[10][25]);
+    //printf("[%d][%d] -> %d\n",0,15,graph[2][45]);
+*/
     /**************************************************************/
 
 

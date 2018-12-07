@@ -18,6 +18,7 @@ int i,j,k; //for using for loops
 typedef struct verticie{
     int numLinks;
     int numEdges;
+    //int *edges;
     int *edges;
 } VERTICIE;
 
