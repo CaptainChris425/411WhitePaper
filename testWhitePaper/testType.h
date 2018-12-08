@@ -23,6 +23,7 @@ typedef struct verticie{
 } VERTICIE;
 
 VERTICIE *allNodes;
+int top5[5] = {-1,-1,-1,-1,-1};
 
 #endif 
 
