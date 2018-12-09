@@ -50,7 +50,7 @@ int addEdgeToNode(VERTICIE *node, int edge){
     //printf("%d\n",node->numEdges);
     node->edges[node->numEdges] = edge;
     node->numEdges += 1;
-    //node->edges = (int *)realloc(node->edges, sizeof(int)*(node->numEdges+1));
+    node->edges = (int *)realloc(node->edges, sizeof(int)*(node->numEdges+1));
     return 0;
 }
 
@@ -86,12 +86,13 @@ int readInFileToGraph(char *file){
     //While there is another line to read in the file
     printf("Loading Graph: |");
     i = 0;
-    while(fgets(line, 256, inGraph) != NULL && i!= numNodes){
+    while(fgets(line, 256, inGraph) != NULL){
+    //printf("[%d | %d] Read in line:\n\t%s\n",i,numNodes,line);
 	i++;
         //If the line doesnt start with a #
         if (line[0] != '#'){
             sscanf(line, "%d" "%d", &vert, &edge);
-            //printf("%d  %d\n",vert,edge);
+           // if (vert == 2257) printf("%d  %d\n",vert,edge);
             numEdges++; 
             if (numEdges%10000 == 0) printf("|");
             addEdgeToGraph(vert,edge);
@@ -168,7 +169,7 @@ int addToTop5(int node){
      }
         
 }
-
+int walk = 0;
 int randomWalk(int node, int length, double damp){
     /*Inputs to the function
     *node -> starting index node
@@ -193,20 +194,28 @@ int randomWalk(int node, int length, double damp){
         numLinks
     */
     double coinToss;
-    printf("Starting a random walk\n---------------\n");
+    printf("Starting a random walk [%d]\n---------------\n",walk++);
     for(i = 0; i < length; i++){
-        printf("%d[%d]{%d}%s",node,allNodes[node].numLinks,allNodes[node].numEdges, (i+1)%5 == 0 ? "\n" : "->");
+        
 
         coinToss = (rand()%100);
         coinToss /= 100;
 
         //coinToss = 100;
-         
-        if(coinToss > damp){
+        //printf("The cointoss was -> %lf and damp is %lf i am -> ",coinToss,damp);
+        if(coinToss < damp || allNodes[node].numEdges == 0){
+            //Heads -> go to a random node in the graph
+            node = ((rand())%numNodes);
+            if (node < 0) node *= -1;
+        }
+        else if(coinToss > damp){
+         //   printf("Random neighbor \n");
             //Tails -> Go to a random 1 hop neighbor
             node = goToRandomNeighbor(node);
         }
+/*
         if(coinToss < damp || node == -1){
+            printf("Random node \n");
             //Heads -> go to a random node in the graph
             node = ((rand()*numNodes*2)%numNodes);
             if (node < 0) node *= -1;
@@ -216,7 +225,9 @@ int randomWalk(int node, int length, double damp){
             } 
             //printf("The node i got randomly is %d\n",node);
         }
+*/
         allNodes[node].numLinks += 1;
+        printf("%d[%d]{%d}%s",node,allNodes[node].numLinks,allNodes[node].numEdges, (i+1)%5 == 0 ? "\n" : "->");
         addToTop5(node);
     }
 }
