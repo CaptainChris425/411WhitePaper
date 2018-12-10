@@ -194,7 +194,7 @@ int randomWalk(int node, int length, double damp){
         numLinks
     */
     double coinToss;
-    printf("Starting a random walk [%d]\n---------------\n",walk++);
+    //printf("Starting a random walk [%d]\n---------------\n",walk++);
     for(i = 0; i < length; i++){
         
 
@@ -227,7 +227,7 @@ int randomWalk(int node, int length, double damp){
         }
 */
         allNodes[node].numLinks += 1;
-        printf("%d[%d]{%d}%s",node,allNodes[node].numLinks,allNodes[node].numEdges, (i+1)%5 == 0 ? "\n" : "->");
+//        printf("%d[%d]{%d}%s",node,allNodes[node].numLinks,allNodes[node].numEdges, (i+1)%5 == 0 ? "\n" : "->");
         addToTop5(node);
     }
 }

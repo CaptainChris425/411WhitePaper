@@ -17,7 +17,7 @@ int i,j,k; //for using for loops
 
 //Struct to hold a representation of a verticie
     //numLinks is the rank it has in pagerank
-            // (update any time a node has an egde to it)
+            // (update anytime a node has an egde to it)
     //edges is the array of all edges the node has (i.e. one hop neighbors)
             // will need to realloc each time an edge is found
 typedef struct vertex{
@@ -79,12 +79,14 @@ int main(int argc, char *argv[]){
 *
 */
 /*1*******Doing a random walk from every node********/
-    int seed,node,coinToss;
-    int everyNode;
-    #pragma omp parallel for private(seed, node, coinToss, i,j,k)
-    for(everyNode = 0; everyNode < numNodes; everyNode++){
+    double start = omp_get_wtime();
+    int seed,node;
+    double coinToss;
+    int everyNode, edge;
+    #pragma omp parallel for shared(allNodes, numNodes) private(seed, node,edge, coinToss, i,j,k)
+    for(everyNode = 0; everyNode < numNodes; everyNode++){ //
         seed = omp_get_thread_num();
-        printf("I am in rank %d with start node %d\n",seed, everyNode);
+//        printf("I am in rank %d with start node %d\n",seed, everyNode);
         //seed = rand();
         node = everyNode;
         //randomWalk(node,length, .5);
@@ -114,21 +116,30 @@ int main(int argc, char *argv[]){
        for(i = 0; i < length; i++){
 /*2*****Take one step until the length of the walk******/
 /*3*****Flip a coin to move to next node****************/
+//        printf("I am in rank %d",seed);
            coinToss = rand_r(&seed)%100;
            coinToss /= 100;
+//        printf(" with cointoss  %lf\n",coinToss);
            if(coinToss < damp || allNodes[node].numEdges == 0){
                //Heads -> go to a random node in the graph
+                seed *= node;
                node = rand_r(&seed)%numNodes;
+ //               printf("node -> %d\n",node);
                if (node < 0) node *= -1;
            }
            else if(coinToss > damp){
                //Tails -> Go to a random 1 hop neighbor
-               node = goToRandomNeighbor(node, seed);
+              // node = goToRandomNeighbor(node, seed);
+                seed *= node;
+               edge = rand_r(&seed);
+               edge = edge%allNodes[node].numEdges;
+//                printf("edge -> %d\n",edge);
+               node = allNodes[node].edges[edge];
            }
-           printf("The update occurs after this\n");
-           #pragma omp atomic update 
+           //printf("The update occurs after this\n");
+           #pragma omp atomic
            allNodes[node].numLinks = allNodes[node].numLinks+1;
-           printf("The update occured\n");
+           //printf("The update occured\n");
 /*3*****Moved to a new node and incrementd LC***********/
            //get the current node's link count into links
 /*4*****Adding the current node to the top5***********/
@@ -180,15 +191,16 @@ int main(int argc, char *argv[]){
 */
 /*4******Node has been added to top5**************/
 /*2******Walk has been completed************************/
+       //printf("[%d](%d){%d}%s",node,allNodes[node].numLinks,allNodes[node].numEdges, (i+1)%5 == 0 ? "\n" : "->"); 
        }
     }
 /*1******All random walks have been completed*********************/
-
+    double end = omp_get_wtime();
 
     int totalLinks = 0;
     for(everyNode = 0; everyNode < numNodes; everyNode++){
         totalLinks += allNodes[everyNode].numLinks;
-//        printf("Node %d has links %d making the total %d\n",node,allNodes[node].numLinks,totalLinks);
+        //printf("Node [%d] -> links [%d] -> Edges [%d] -> total [%d]\n",everyNode,allNodes[everyNode].numLinks,allNodes[everyNode].numEdges,totalLinks);
     }
     printf("Total links -> %d\n",totalLinks);
 
@@ -232,6 +244,7 @@ int main(int argc, char *argv[]){
                   }
                   j = 6;
                 }
+                
 
             }
             
@@ -242,8 +255,7 @@ int main(int argc, char *argv[]){
 
     }
 
-
-    cleanUp();
+    printf("Time for PageRank to be ran on %d verticies with walk length %d = %lf\n",numNodes,length,end-start); 
 }
 
 int initGraphs(){

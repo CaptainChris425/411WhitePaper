@@ -45,7 +45,8 @@ int main(int argc, char *argv[]){
 
 
     int totalLinks = 0;
-    for(everyNode = 0; everyNode < numNodes; everyNode++){
+    for(i = 0; i < numNodes; i++){
+        //printf("Node [%d] -> Links [%d] -> Edges[%d]\n", i, allNodes[i].numLinks,allNodes[i].numEdges);
         totalLinks += allNodes[everyNode].numLinks;
 //        printf("Node %d has links %d making the total %d\n",everyNode,allNodes[everyNode].numLinks,totalLinks);
 
