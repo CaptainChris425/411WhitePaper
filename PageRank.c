@@ -25,6 +25,7 @@ typedef struct vertex{
     int numEdges;
     //int *edges;
     int *edges;
+    double rank; //link / totalLinks
 } VERTEX;
 
 VERTEX *allNodes;
@@ -40,14 +41,16 @@ int goToRandomNeighbor(int node, int seed);
 
 int main(int argc, char *argv[]){
    // srand((int)time(0));
-    if (argc < 5){
-        printf("Usage: a.out graph(textfile) #nodes lengthOfWalk dampingRatio\n");
+    if (argc < 6){
+        printf("Usage: a.out graph(textfile) #nodes lengthOfWalk dampingRatio numThreads\n");
         exit(0);
     }
     //Store numNodes so it is easier to access as well as an int
     numNodes = atoi(argv[2]);
     int length = atoi(argv[3]);
     double damp = atof(argv[4]); 
+    int numThreads = atoi(argv[5]);
+    omp_set_num_threads(numThreads);
     int walk = 0;
     initGraphs(); 
     readInFileToGraph(argv[1]);
@@ -74,8 +77,10 @@ int main(int argc, char *argv[]){
 *          Top5     (the top 5 ranked nodes)
 * Private : node (the current node)
 *           seed (the seed used for random number gen)
+*           edge (the random edge used to go to a neighbor)
+*           coinToss (the variable used to "flip a coin")
+*           i,j,k (loop variables)
 * Atomic Write :    allNodes[node].numLinks++ (Increasing links count)
-*                   top5[index] = node        (Adding node to top5)
 *
 */
 /*1*******Doing a random walk from every node********/
@@ -141,55 +146,6 @@ int main(int argc, char *argv[]){
            allNodes[node].numLinks = allNodes[node].numLinks+1;
            //printf("The update occured\n");
 /*3*****Moved to a new node and incrementd LC***********/
-           //get the current node's link count into links
-/*4*****Adding the current node to the top5***********/
-/*
-          // #pragma omp critical
-          //  {
-           int ogNode = node;
-           int links = allNodes[node].numLinks;
-           for(j = 0; j < 5; j++){
-           //For every verticie in the top5
-               //if the current top5 slot is unfilled
-                   //fill it
-               if (top5[j] == node) j = 6;
-               if (top5[j] == -1){
-                   top5[j] = node;
-                   j = 6;
-               }else
-               //if the current links are greater than the
-               //top5 node's links
-               if (links > allNodes[top5[j]].numLinks){
-                   //get store the links of the old top5 node
-                  links = allNodes[top5[j]].numLinks;
-                   //store the old top5 node
-                  int tempNode = top5[j];
-                   //set the new top5 node
-                  #pragma omp atomic write
-                  top5[j] = node;
-                   //store the old top5 node as the new node to enter
-                  node = tempNode;
-                  for (k = j+1; k<5;k++){
-                   //for the rest of the list 
-                       if (top5[k] == ogNode){
-                           #pragma omp atomic write
-                           top5[k] = node;
-                           j = 6;
-                       }
-                      tempNode = top5[k];
-                       #pragma omp atomic write
-                       top5[k] = node;
-                       node = tempNode;
-                  }
-                  j = 6;
-                }
-
-            }
-            
-            node = ogNode;
-            //}
-*/
-/*4******Node has been added to top5**************/
 /*2******Walk has been completed************************/
        //printf("[%d](%d){%d}%s",node,allNodes[node].numLinks,allNodes[node].numEdges, (i+1)%5 == 0 ? "\n" : "->"); 
        }
@@ -200,6 +156,7 @@ int main(int argc, char *argv[]){
     int totalLinks = 0;
     for(everyNode = 0; everyNode < numNodes; everyNode++){
         totalLinks += allNodes[everyNode].numLinks;
+	allNodes[everyNode].rank = (double)allNodes[everyNode].numLinks/(double)(numNodes*length);
         //printf("Node [%d] -> links [%d] -> Edges [%d] -> total [%d]\n",everyNode,allNodes[everyNode].numLinks,allNodes[everyNode].numEdges,totalLinks);
     }
     printf("Total links -> %d\n",totalLinks);
@@ -251,11 +208,11 @@ int main(int argc, char *argv[]){
             node = ogNode;
     }
     for(i=0;i<5;i++){
-        printf("Node [%d] -> Links [%d] -> Edges[%d]\n", top5[i], allNodes[top5[i]].numLinks,allNodes[top5[i]].numEdges);
+        printf("Node [%d] -> Links [%d] -> Rank [%lf] -> Edges[%d]\n", top5[i], allNodes[top5[i]].numLinks,allNodes[top5[i]].rank,allNodes[top5[i]].numEdges);
 
     }
 
-    printf("Time for PageRank to be ran on %d verticies with walk length %d = %lf\n",numNodes,length,end-start); 
+    printf("Threads [%d] -> NumNodes [%d] -> WalkLength [%d] -> Time [%lf]\n",numThreads,numNodes,length,end-start); 
 }
 
 int initGraphs(){
